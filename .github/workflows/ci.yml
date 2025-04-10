@@ -50,6 +50,8 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          sonar-scanner -Dsonar.projectKey=iprachuk_MyProject -Dsonar.sources=src -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.organization=iprachuk
       - name: Запуск flake8 через Reviewdog
         uses: reviewdog/action-flake8@v2
         with:
