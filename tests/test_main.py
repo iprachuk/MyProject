@@ -1,5 +1,5 @@
 import unittest
-from src.myproject.main import square
+from src.main import square
 
 class TestSquare(unittest.TestCase):
     def test_square(self):
