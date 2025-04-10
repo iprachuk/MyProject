@@ -45,8 +45,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: '-Dsonar.projectKey=iprachuk_MyProject -Dsonar.sources=src -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=${{ secrets.iprachuk }} -Dsonar.login=${{ secrets.SONAR_TOKEN }}'
-
+          args: '-Dsonar.projectKey=iprachuk_MyProject -Dsonar.sources=src -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=iprachuk -Dsonar.login=${{ secrets.SONAR_TOKEN }}'
       - name: Run flake8 with Reviewdog
         uses: reviewdog/action-flake8@v2
         with:
