@@ -46,7 +46,7 @@ jobs:
           wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
           unzip sonar-scanner-cli-4.8.0.2856-linux.zip
           export PATH=$PATH:$(pwd)/sonar-scanner-4.8.0.2856-linux/bin
-          sonar-scanner
+          sonar-scanner -X
 
       - name: Запуск flake8 через Reviewdog
         uses: reviewdog/action-flake8@v2
@@ -78,11 +78,12 @@ jobs:
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
-            const { data: reviews } = await github.pulls.listReviews({
+            const { data: reviews } = await github.rest.pulls.listReviews({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber
             });
+
             const approved = reviews.some(review => review.state === 'APPROVED');
             if (!approved) {
               core.setFailed("Код-рев’ю не схвалено");
