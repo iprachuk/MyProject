@@ -39,36 +39,33 @@ jobs:
           cloc src/ > cloc-report.txt
           cat cloc-report.txt
 
-          - name: SonarQube Scan
-          uses: SonarSource/sonarqube-scan-action@v5
-          env:
-            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-            
-      - name: Запуск flake8 через Reviewdog
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: '-Dsonar.projectKey=iprachuk_MyProject -Dsonar.sources=src -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}'
+
+      - name: Run flake8 with Reviewdog
         uses: reviewdog/action-flake8@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           level: error
 
-      - name: Запуск Black через Reviewdog
+      - name: Run Black with Reviewdog
         uses: reviewdog/action-black@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           level: info
 
-      - name: Перевірка змін у гілці develop
-        run: |
-          git fetch origin develop
-          git log origin/develop..HEAD --oneline --graph > develop_changes.txt
-          cat develop_changes.txt
-
   review-check:
     if: github.event.pull_request.base.ref == 'develop'
     runs-on: ubuntu-latest
     steps:
-      - name: Перевірка наявності схваленого код-рев’ю
+      - name: Check for approved code review
         uses: actions/github-script@v6
         with:
           script: |
