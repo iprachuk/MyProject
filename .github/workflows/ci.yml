@@ -20,7 +20,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install --no-cache-dir -r requirements.txt
 
       - name: Run tests
         run: python -m pytest --junitxml=report.xml
@@ -39,41 +39,33 @@ jobs:
           cloc src/ > cloc-report.txt
           cat cloc-report.txt
 
-      - name: Run SonarQube analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
-          export PATH=$PATH:$(pwd)/sonar-scanner-4.8.0.2856-linux/bin
-          sonar-scanner -X
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: '-Dsonar.projectKey=iprachuk_MyProject -Dsonar.sources=src -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}'
 
-      - name: Запуск flake8 через Reviewdog
+      - name: Run flake8 with Reviewdog
         uses: reviewdog/action-flake8@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           level: error
 
-      - name: Запуск Black через Reviewdog
+      - name: Run Black with Reviewdog
         uses: reviewdog/action-black@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           level: info
 
-      - name: Перевірка змін у гілці develop
-        run: |
-          git checkout develop
-          git pull
-          git log --oneline --graph > develop_changes.txt
-          cat develop_changes.txt
-
   review-check:
     if: github.event.pull_request.base.ref == 'develop'
     runs-on: ubuntu-latest
     steps:
-      - name: Перевірка наявності схваленого код-рев’ю
+      - name: Check for approved code review
         uses: actions/github-script@v6
         with:
           script: |
