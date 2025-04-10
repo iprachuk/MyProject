@@ -1,6 +1,7 @@
 import unittest
 import sys
-sys.path.insert(0, './src')  # Додаємо src в початок шляху
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 from src.main import square
 
 class TestSquare(unittest.TestCase):
