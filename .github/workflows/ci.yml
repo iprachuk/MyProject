@@ -63,8 +63,9 @@ jobs:
       - name: Ensure Git is initialized
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git remote set-url origin https://github.com/iprachuk/MyProject.git
           git fetch origin develop
-        
+
       - name: Запуск Black через Reviewdog
         uses: reviewdog/action-black@v1
         with:
