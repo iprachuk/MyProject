@@ -2,12 +2,10 @@ name: CI Pipeline
 
 on:
   pull_request:
+    branches: [develop]
     types: [opened, edited, reopened, synchronize, review_requested]
-    branches:
-      - develop
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
@@ -15,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Забезпечує повну історію для точного порівняння
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -22,7 +22,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install --no-cache-dir -r requirements.txt
 
       - name: Run tests
         run: python -m pytest --junitxml=report.xml
@@ -33,27 +33,82 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Run SonarQube Scan
+      - name: Count lines of code with Cloc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cloc
+          cloc src/ > cloc-report.txt
+          cat cloc-report.txt
+
+      - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
+        with:
+          args: >
+            -Dsonar.projectKey=iprachuk_MyProject
+            -Dsonar.organization=iprachuk
+            -Dsonar.sources=src/
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Запуск flake8 через Reviewdog
+        uses: reviewdog/action-flake8@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          level: error
+
+      - name: Ensure Git is initialized
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git remote set-url origin https://github.com/iprachuk/MyProject.git
+          git fetch origin develop
+
+      - name: Запуск Black через Reviewdog
+        uses: reviewdog/action-black@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          level: info
 
   review-check:
     if: github.event.pull_request.base.ref == 'develop'
     runs-on: ubuntu-latest
     steps:
+      - name: Клонування репозиторію
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Забезпечує повну історію для точного порівняння
+
+      - name: Налаштування Git як безпечного
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Перевірка наявності схваленого код-рев’ю
         uses: actions/github-script@v6
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
-            const { data: reviews } = await github.pulls.listReviews({
+            const { data: reviews } = await github.rest.pulls.listReviews({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber
             });
+
             const approved = reviews.some(review => review.state === 'APPROVED');
             if (!approved) {
               core.setFailed("Код-рев’ю не схвалено");
             }
+
+      - name: Перевірка змін у гілці develop
+        run: |
+              # Оновлюємо інформацію про віддалену гілку develop
+              git fetch origin develop
+          
+              # Порівнюємо зміни між поточною гілкою (HEAD) і develop
+              git diff origin/develop...HEAD > develop_changes.txt
+          
+              # Виводимо зміни у файл develop_changes.txt
+              cat develop_changes.txt
