@@ -95,6 +95,12 @@ jobs:
 
       - name: Перевірка змін у гілці develop
         run: |
-          git fetch origin develop
-          git log origin/develop..HEAD --oneline --graph > develop_changes.txt
-          cat develop_changes.txt
+            # Оновлюємо інформацію про віддалену гілку develop
+            git fetch origin develop
+          
+              # Порівнюємо зміни між поточною гілкою (HEAD) і develop
+              git diff origin/develop...HEAD > develop_changes.txt
+          
+              # Виводимо зміни у файл develop_changes.txt
+              cat develop_changes.txt
+          
