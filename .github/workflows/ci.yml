@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Забезпечує повну історію для точного порівняння
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -77,6 +77,15 @@ jobs:
     if: github.event.pull_request.base.ref == 'develop'
     runs-on: ubuntu-latest
     steps:
+      - name: Клонування репозиторію
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Забезпечує повну історію для точного порівняння
+
+      - name: Налаштування Git як безпечного
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Перевірка наявності схваленого код-рев’ю
         uses: actions/github-script@v6
         with:
@@ -95,12 +104,11 @@ jobs:
 
       - name: Перевірка змін у гілці develop
         run: |
-            # Оновлюємо інформацію про віддалену гілку develop
-            git fetch origin develop
+              # Оновлюємо інформацію про віддалену гілку develop
+              git fetch origin develop
           
               # Порівнюємо зміни між поточною гілкою (HEAD) і develop
               git diff origin/develop...HEAD > develop_changes.txt
           
               # Виводимо зміни у файл develop_changes.txt
               cat develop_changes.txt
-          
