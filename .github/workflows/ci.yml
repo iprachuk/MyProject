@@ -56,12 +56,17 @@ jobs:
           reporter: github-pr-review
           level: error
 
+      - name: Ensure Git is initialized
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+  
       - name: Запуск Black через Reviewdog
         uses: reviewdog/action-black@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           level: info
+  
 
   review-check:
     if: github.event.pull_request.base.ref == 'develop'
